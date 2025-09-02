@@ -6,10 +6,12 @@ import {
   openRouterModels, 
   modelsStateAtom, 
   type ModelId,
+  type ExtendedModelId,
   type ModelState,
   type Message,
   addMessageToHistory,
-  getConversationContext
+  getConversationContext,
+  EVALUATOR_AGENT_ID
 } from '../lib/atoms';
 import Sidebar from './Sidebar';
 import MultiResponseDisplay from './MultiResponseDisplay';
@@ -27,6 +29,9 @@ export default function ChatApp() {
   const [globalError, setGlobalError] = useState<string | null>(null);
   const connectionPoolRef = useRef<ConnectionPool | null>(null);
   const currentConnectionRef = useRef<string | null>(null);
+  const [evaluationRequested, setEvaluationRequested] = useState<string | null>(null); // Track current prompt being evaluated
+  const evaluationTimeoutRef = useRef<NodeJS.Timeout | null>(null); // For delayed evaluation
+  const lastResponseTimestamp = useRef<Map<string, number>>(new Map()); // Track last response time per model
 
   // Auto-collapse sidebar on mobile for better UX
   useEffect(() => {
@@ -42,7 +47,7 @@ export default function ChatApp() {
   }, []);
 
   // Use the single state atom
-  const [, setModelsState] = useAtom(modelsStateAtom);
+  const [modelsState, setModelsState] = useAtom(modelsStateAtom);
 
   // Initialize connection pool
   useEffect(() => {
@@ -77,8 +82,186 @@ export default function ChatApp() {
         connectionPoolRef.current.closeAllConnections();
       }
       clearInterval(cleanupInterval);
+      
+      // Clear evaluation timeout
+      if (evaluationTimeoutRef.current) {
+        clearTimeout(evaluationTimeoutRef.current);
+      }
     };
   }, []);
+
+  // Auto-trigger evaluation when all selected models finish responding (with smart delay)
+  useEffect(() => {
+    if (!currentPrompt || evaluationRequested === currentPrompt || selectedModels.length === 0) {
+      return;
+    }
+
+    // Clear any existing timeout
+    if (evaluationTimeoutRef.current) {
+      clearTimeout(evaluationTimeoutRef.current);
+      evaluationTimeoutRef.current = null;
+    }
+
+    // Check if all selected models have finished loading
+    const allModelsFinished = selectedModels.every(modelId => {
+      const modelState = modelsState.get(modelId);
+      return modelState && !modelState.isLoading;
+    });
+
+    // Check if at least one model has a response (to avoid evaluating errors only)
+    const hasSuccessfulResponses = selectedModels.some(modelId => {
+      const modelState = modelsState.get(modelId);
+      return modelState && !modelState.error && modelState.history.length > 0 && 
+             modelState.history.some(msg => msg.role === 'assistant');
+    });
+
+    // Count how many models have meaningful responses (not just started)
+    const modelsWithCompleteResponses = selectedModels.filter(modelId => {
+      const modelState = modelsState.get(modelId);
+      if (!modelState || modelState.error || modelState.isLoading) return false;
+      
+      const assistantMessages = modelState.history.filter(msg => msg.role === 'assistant');
+      const latestResponse = assistantMessages[assistantMessages.length - 1];
+      
+      // Consider a response complete if it has substantial content (more than just a few characters)
+      return latestResponse && latestResponse.content.trim().length > 10;
+    }).length;
+
+    if (allModelsFinished && hasSuccessfulResponses && modelsWithCompleteResponses >= Math.min(2, selectedModels.length)) {
+      // Add a smart delay before evaluation to ensure all streaming is truly complete
+      const delayMs = selectedModels.length <= 2 ? 2000 : 3000; // Longer delay for more models
+      
+      console.log(`All models finished. Scheduling evaluation in ${delayMs}ms...`);
+      
+      evaluationTimeoutRef.current = setTimeout(() => {
+        console.log('Triggering evaluation after delay...');
+        setEvaluationRequested(currentPrompt);
+        triggerEvaluation();
+        evaluationTimeoutRef.current = null;
+      }, delayMs);
+    }
+  }, [modelsState, selectedModels, currentPrompt, evaluationRequested]);
+
+  // Function to trigger AI evaluation
+  const triggerEvaluation = async () => {
+    if (!currentPrompt || selectedModels.length === 0) return;
+
+    // Set evaluator to loading state
+    setModelsState(currentMap => {
+      const newMap = new Map(currentMap);
+      newMap.set(EVALUATOR_AGENT_ID, {
+        history: [],
+        isLoading: true,
+        error: null,
+        progress: 'Analyzing responses...',
+        retryable: false
+      });
+      return newMap;
+    });
+
+    try {
+      // Collect model responses for evaluation with timing data
+      const modelResponses = selectedModels
+        .map(modelId => {
+          const modelState = modelsState.get(modelId);
+          const model = openRouterModels.find(m => m.id === modelId);
+          
+          if (!modelState || !model) return null;
+          
+          // Get the latest assistant response
+          const assistantMessages = modelState.history.filter(msg => msg.role === 'assistant');
+          const latestResponse = assistantMessages[assistantMessages.length - 1];
+          
+          if (!latestResponse || modelState.error) return null;
+          
+          // Calculate timing metrics
+          const timeToFirstToken = modelState.firstTokenTime && modelState.requestStartTime 
+            ? modelState.firstTokenTime - modelState.requestStartTime 
+            : null;
+          const totalResponseTime = modelState.responseEndTime && modelState.requestStartTime 
+            ? modelState.responseEndTime - modelState.requestStartTime 
+            : null;
+          const streamingDuration = modelState.lastTokenTime && modelState.firstTokenTime 
+            ? modelState.lastTokenTime - modelState.firstTokenTime 
+            : null;
+          
+          return {
+            modelId: model.id,
+            modelName: model.name,
+            response: latestResponse.content,
+            timing: {
+              timeToFirstToken, // Latency (ms to first token)
+              totalResponseTime, // Total time from request to completion
+              streamingDuration, // How long the streaming took
+              requestStartTime: modelState.requestStartTime,
+              firstTokenTime: modelState.firstTokenTime,
+              responseEndTime: modelState.responseEndTime
+            }
+          };
+        })
+        .filter(response => response !== null);
+
+      if (modelResponses.length === 0) {
+        throw new Error('No valid responses to evaluate');
+      }
+
+      // Call the evaluation API
+      const response = await fetch('/api/evaluate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userPrompt: currentPrompt,
+          modelResponses
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `API request failed with status ${response.status}`);
+      }
+
+      const evaluationResult = await response.json();
+
+      // Update evaluator state with the result
+      setModelsState(currentMap => {
+        const newMap = new Map(currentMap);
+        const evaluationMessage: Message = {
+          id: `eval-${Date.now()}`,
+          role: 'assistant',
+          content: JSON.stringify(evaluationResult),
+          timestamp: Date.now(),
+          modelId: EVALUATOR_AGENT_ID
+        };
+
+        newMap.set(EVALUATOR_AGENT_ID, {
+          history: [evaluationMessage],
+          isLoading: false,
+          error: null,
+          progress: null,
+          retryable: false
+        });
+        return newMap;
+      });
+
+    } catch (error) {
+      console.error('Evaluation failed:', error);
+      
+      // Set evaluator error state
+      setModelsState(currentMap => {
+        const newMap = new Map(currentMap);
+        newMap.set(EVALUATOR_AGENT_ID, {
+          history: [],
+          isLoading: false,
+          error: error instanceof Error ? error.message : 'Evaluation failed',
+          progress: null,
+          retryable: true
+        });
+        return newMap;
+      });
+    }
+  };
 
   const handleModelToggle = (modelId: ModelId) => {
     setSelectedModels(prev => {
@@ -119,6 +302,10 @@ export default function ChatApp() {
     switch (type) {
       case 'chunk':
         if (data.token) {
+          const currentTime = Date.now();
+          // Update last response timestamp for this model
+          lastResponseTimestamp.current.set(modelId, currentTime);
+          
           setModelsState(currentMap => {
             const newMap = new Map(currentMap);
             const currentState = newMap.get(modelId) || { history: [], isLoading: false, error: null, progress: null, retryable: false };
@@ -126,6 +313,8 @@ export default function ChatApp() {
             
             // Find the last assistant message for this model, or create a new one
             const lastMessage = updatedHistory[updatedHistory.length - 1];
+            const isFirstToken = !lastMessage || lastMessage.role !== 'assistant' || lastMessage.modelId !== modelId;
+            
             if (lastMessage && lastMessage.role === 'assistant' && lastMessage.modelId === modelId) {
               // Append token to existing assistant message
               lastMessage.content += data.token;
@@ -144,7 +333,10 @@ export default function ChatApp() {
             newMap.set(modelId, { 
               ...currentState, 
               history: updatedHistory,
-              progress: null
+              progress: null,
+              // Update timing information
+              firstTokenTime: isFirstToken ? currentTime : currentState.firstTokenTime,
+              lastTokenTime: currentTime
             });
             return newMap;
           });
@@ -169,7 +361,8 @@ export default function ChatApp() {
       case 'end':
         updateModelState(modelId, { 
           isLoading: false,
-          progress: null
+          progress: null,
+          responseEndTime: Date.now()
         });
         
 
@@ -219,6 +412,14 @@ export default function ChatApp() {
     setIsSubmitting(false);
     setConnectionStatus(null);
     setGlobalError(null);
+    setEvaluationRequested(null); // Reset evaluation tracking
+    lastResponseTimestamp.current.clear(); // Clear response timestamps
+    
+    // Clear any pending evaluation
+    if (evaluationTimeoutRef.current) {
+      clearTimeout(evaluationTimeoutRef.current);
+      evaluationTimeoutRef.current = null;
+    }
   };
 
   const handleSubmit = async (prompt: string) => {
@@ -233,6 +434,7 @@ export default function ChatApp() {
     }
 
     // Add user message to all selected models' history and set loading state
+    const requestStartTime = Date.now();
     setModelsState(currentMap => {
       const newMap = new Map(currentMap);
       
@@ -246,7 +448,12 @@ export default function ChatApp() {
           isLoading: true, 
           error: null, 
           progress: 'Initializing...', 
-          retryable: false 
+          retryable: false,
+          // Initialize timing
+          requestStartTime,
+          firstTokenTime: undefined,
+          lastTokenTime: undefined,
+          responseEndTime: undefined
         });
       });
       

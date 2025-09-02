@@ -16,6 +16,11 @@ export interface ModelState {
   error: string | null;
   progress?: string | null;
   retryable?: boolean;
+  // Timing information for speed analysis
+  requestStartTime?: number;
+  firstTokenTime?: number;
+  lastTokenTime?: number;
+  responseEndTime?: number;
 }
 
 // Model Interface
@@ -136,11 +141,17 @@ export const openRouterModels: Model[] = [
 
 export type ModelId = (typeof openRouterModels)[number]['id'];
 
-// Single state atom using Map for efficient updates
-export const modelsStateAtom = atom<Map<ModelId, ModelState>>(new Map());
+// Evaluator Agent ID - Special identifier for the AI evaluation agent
+export const EVALUATOR_AGENT_ID = 'evaluator/gemini-2.5-flash' as const;
 
-// Helper function to get model state
-export const getModelState = (modelId: ModelId, state: Map<ModelId, ModelState>): ModelState => {
+// Extended ModelId type to include the evaluator
+export type ExtendedModelId = ModelId | typeof EVALUATOR_AGENT_ID;
+
+// Single state atom using Map for efficient updates - now supports evaluator
+export const modelsStateAtom = atom<Map<ExtendedModelId, ModelState>>(new Map());
+
+// Helper function to get model state - now supports evaluator
+export const getModelState = (modelId: ExtendedModelId, state: Map<ExtendedModelId, ModelState>): ModelState => {
   return state.get(modelId) || { history: [], isLoading: false, error: null, progress: null, retryable: false };
 };
 

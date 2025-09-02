@@ -1,8 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useAtom } from 'jotai';
 import ResponseColumn from './ResponseColumn';
-import { openRouterModels } from '../lib/atoms';
+import EvaluatorColumn from './EvaluatorColumn';
+import { openRouterModels, modelsStateAtom, EVALUATOR_AGENT_ID, getModelState } from '../lib/atoms';
 
 interface MultiResponseDisplayProps {
   selectedModels: string[];
@@ -13,6 +15,12 @@ interface MultiResponseDisplayProps {
 export default function MultiResponseDisplay({ selectedModels, currentPrompt, onFocusModel }: MultiResponseDisplayProps) {
   const [activeTab, setActiveTab] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
+  const [modelsState] = useAtom(modelsStateAtom);
+  
+  // Check if evaluator has results to display
+  const evaluatorState = getModelState(EVALUATOR_AGENT_ID, modelsState);
+  const hasEvaluatorData = evaluatorState.isLoading || evaluatorState.error || 
+    (evaluatorState.history.length > 0 && evaluatorState.history.some(msg => msg.role === 'assistant'));
   
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -118,10 +126,33 @@ export default function MultiResponseDisplay({ selectedModels, currentPrompt, on
                 </button>
               );
             })}
+            
+            {/* Add Analysis tab if evaluator has data */}
+            {hasEvaluatorData && (
+              <button
+                onClick={() => setActiveTab(selectedModels.length)}
+                className={`flex-shrink-0 px-4 py-3 text-sm font-medium transition-all duration-200 touch-manipulation ${
+                  activeTab === selectedModels.length
+                    ? 'text-purple-400 border-b-2 border-purple-400 bg-slate-700/70'
+                    : 'text-slate-400 hover:text-slate-300 hover:bg-slate-700/50 active:bg-slate-600'
+                }`}
+                style={{ minWidth: '120px' }}
+                role="tab"
+                aria-selected={activeTab === selectedModels.length}
+                aria-controls="tabpanel-evaluator"
+                id="tab-evaluator"
+                tabIndex={activeTab === selectedModels.length ? 0 : -1}
+              >
+                <div className="flex items-center gap-2 truncate">
+                  <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                  AI Analysis
+                </div>
+              </button>
+            )}
           </div>
           
           {/* Tab indicator dots for better mobile UX */}
-          {selectedModels.length > 1 && (
+          {(selectedModels.length > 1 || hasEvaluatorData) && (
             <div className="flex justify-center py-2 gap-1" role="tablist" aria-label="Model navigation dots">
               {selectedModels.map((_, index) => (
                 <button
@@ -134,18 +165,30 @@ export default function MultiResponseDisplay({ selectedModels, currentPrompt, on
                   aria-pressed={activeTab === index}
                 />
               ))}
+              {hasEvaluatorData && (
+                <button
+                  onClick={() => setActiveTab(selectedModels.length)}
+                  className={`w-2 h-2 rounded-full transition-all duration-200 ${
+                    activeTab === selectedModels.length ? 'bg-purple-400' : 'bg-slate-600'
+                  }`}
+                  aria-label="Switch to AI Analysis"
+                  aria-pressed={activeTab === selectedModels.length}
+                />
+              )}
             </div>
           )}
         </div>
 
         {/* Active Tab Content */}
         <div 
-          className="p-4"
+          className="p-4 flex-1 min-h-0"
           role="tabpanel"
-          id={`tabpanel-${selectedModels[activeTab]}`}
-          aria-labelledby={`tab-${selectedModels[activeTab]}`}
+          id={activeTab === selectedModels.length ? 'tabpanel-evaluator' : `tabpanel-${selectedModels[activeTab]}`}
+          aria-labelledby={activeTab === selectedModels.length ? 'tab-evaluator' : `tab-${selectedModels[activeTab]}`}
         >
-          {selectedModels[activeTab] && (
+          {activeTab === selectedModels.length ? (
+            <EvaluatorColumn />
+          ) : selectedModels[activeTab] && (
             <ResponseColumn
               modelId={selectedModels[activeTab] as any}
               currentPrompt={currentPrompt}
@@ -158,19 +201,29 @@ export default function MultiResponseDisplay({ selectedModels, currentPrompt, on
     );
   }
 
-  // Desktop view with grid - Fixed equal sizes
+  // Desktop view with grid - Dynamic layout including evaluator
   return (
     <div className="p-3 h-full overflow-hidden" role="region" aria-label="AI Model Responses Grid">
       <div 
         className={`grid gap-3 h-full ${
-          selectedModels.length === 1 ? 'grid-cols-1 grid-rows-1 max-w-4xl mx-auto' :
-          selectedModels.length === 2 ? 'grid-cols-2 grid-rows-1' :
-          selectedModels.length === 3 ? 'grid-cols-3 grid-rows-1' :
-          'grid-cols-2 grid-rows-2'
+          !hasEvaluatorData ? (
+            // Standard grid without evaluator
+            selectedModels.length === 1 ? 'grid-cols-1 grid-rows-1 max-w-4xl mx-auto' :
+            selectedModels.length === 2 ? 'grid-cols-2 grid-rows-1' :
+            selectedModels.length === 3 ? 'grid-cols-3 grid-rows-1' :
+            'grid-cols-2 grid-rows-2'
+          ) : (
+            // Dynamic grid with evaluator column
+            selectedModels.length === 1 ? 'grid-cols-2 grid-rows-1' : // 1 model + evaluator = 2 columns
+            selectedModels.length === 2 ? 'grid-cols-3 grid-rows-1' : // 2 models + evaluator = 3 columns  
+            selectedModels.length === 3 ? 'grid-cols-2 grid-rows-2' : // 3 models + evaluator = 2x2 grid
+            'grid-cols-3 grid-rows-2' // 4 models + evaluator = 3x2 grid
+          )
         }`}
         role="grid"
-        aria-label={`${selectedModels.length} AI model response${selectedModels.length !== 1 ? 's' : ''}`}
+        aria-label={`${selectedModels.length} AI model response${selectedModels.length !== 1 ? 's' : ''}${hasEvaluatorData ? ' with AI analysis' : ''}`}
       >
+        {/* Model response columns */}
         {selectedModels.map((modelId, index) => (
           <div key={modelId} role="gridcell" aria-label={`Response from model ${index + 1}`} className="min-h-0">
             <ResponseColumn
@@ -181,6 +234,13 @@ export default function MultiResponseDisplay({ selectedModels, currentPrompt, on
             />
           </div>
         ))}
+        
+        {/* Evaluator column */}
+        {hasEvaluatorData && (
+          <div role="gridcell" aria-label="AI Analysis" className="min-h-0">
+            <EvaluatorColumn />
+          </div>
+        )}
       </div>
     </div>
   );
