@@ -61,10 +61,10 @@ export default function ModelTooltip({ model, children, disabled }: ModelTooltip
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'available': return 'text-green-800';
-      case 'rate-limited': return 'text-orange-800';
-      case 'unavailable': return 'text-red-800';
-      default: return 'text-black';
+      case 'available': return 'text-green-600';
+      case 'rate-limited': return 'text-orange-600';
+      case 'unavailable': return 'text-red-600';
+      default: return 'pro-text-primary';
     }
   };
 
@@ -115,62 +115,62 @@ export default function ModelTooltip({ model, children, disabled }: ModelTooltip
         >
           <div className="relative">
             {/* Arrow pointer */}
-            <div className="absolute left-0 top-1/2 transform -translate-x-2 -translate-y-1/2">
-              <div className="w-0 h-0 border-t-6 border-b-6 border-r-6 border-transparent drop-shadow-sm" style={{ borderRightColor: '#ffffff' }}></div>
-              <div className="absolute w-0 h-0 border-t-6 border-b-6 border-r-6 border-transparent -left-px" style={{ borderRightColor: '#000000' }}></div>
+            <div className="absolute left-0 top-1/2 transform -translate-x-1 -translate-y-1/2">
+              <div className="w-0 h-0 border-t-8 border-b-8 border-r-8 border-transparent" style={{ borderRightColor: '#ffffff' }}></div>
             </div>
             
-            <div className="bg-white border-4 border-black rounded-xl p-5 max-w-sm text-black ml-2 relative" style={{ 
-              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(0, 0, 0, 1)',
-              backgroundColor: '#ffffff',
-              color: '#000000'
+            <div className="pro-card pro-surface max-w-sm ml-2 relative" style={{ 
+              padding: '20px',
+              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+              borderRadius: '16px'
             }}>
-              {/* Header with bright background */}
-              <div className="flex items-start justify-between mb-4 bg-gray-50 p-3 rounded-lg border-2 border-black">
-                <div>
-                  <h3 className="font-black text-black text-base" style={{ color: '#000000' }}>{model.fullName}</h3>
-                  <p className="text-sm text-black mt-1 font-bold" style={{ color: '#000000' }}>{model.provider}</p>
+              {/* Header */}
+              <div className="flex items-start justify-between mb-4 pb-3 pro-border-b">
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold pro-text-primary text-base leading-tight">{model.fullName}</h3>
+                  <p className="text-sm pro-text-muted mt-1">{model.provider}</p>
                 </div>
-                <div className={`flex items-center gap-2 ${getStatusColor(model.status)}`}>
+                <div className={`flex items-center gap-1.5 ml-3 ${getStatusColor(model.status)}`}>
                   {getStatusIcon(model.status)}
-                  <span className="text-sm capitalize font-black text-black" style={{ color: '#000000' }}>{model.status}</span>
+                  <span className="text-xs capitalize font-medium">{model.status}</span>
                 </div>
               </div>
 
-              {/* Description with background */}
-              <div className="bg-gray-50 p-3 rounded-lg border-2 border-black mb-4">
-                <p className="text-sm text-black leading-relaxed font-semibold" style={{ color: '#000000' }}>
+              {/* Description */}
+              <div className="mb-4">
+                <p className="text-sm pro-text-primary leading-relaxed">
                   {model.description}
                 </p>
               </div>
 
-              {/* Details with strong background */}
-              <div className="space-y-3 mb-4 bg-gray-50 p-3 rounded-lg border-2 border-black">
-                <div className="flex justify-between items-center bg-white p-2 rounded border border-black">
-                  <span className="text-sm text-black font-bold" style={{ color: '#000000' }}>Context Length:</span>
-                  <span className="text-sm text-black font-mono font-black bg-gray-200 px-2 py-1 rounded border border-black" style={{ color: '#000000' }}>
+              {/* Details */}
+              <div className="space-y-3 mb-4">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm pro-text-muted">Context Length:</span>
+                  <span className="text-sm font-medium pro-text-primary bg-slate-100 px-2 py-1 rounded-md">
                     {formatContextLength(model.contextLength)} tokens
                   </span>
                 </div>
-                <div className="flex justify-between items-center bg-white p-2 rounded border border-black">
-                  <span className="text-sm text-black font-bold" style={{ color: '#000000' }}>Pricing:</span>
-                  <span className={`text-sm font-black px-3 py-1 rounded-full border-2 border-black ${
-                    model.pricing === 'free' ? 'bg-green-200 text-black' : 'bg-blue-200 text-black'
-                  }`} style={{ color: '#000000' }}>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm pro-text-muted">Pricing:</span>
+                  <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${
+                    model.pricing === 'free' 
+                      ? 'bg-green-100 text-green-700' 
+                      : 'bg-blue-100 text-blue-700'
+                  }`}>
                     {model.pricing === 'free' ? 'FREE' : 'PAID'}
                   </span>
                 </div>
               </div>
 
-              {/* Strengths with bright background */}
-              <div className="bg-gray-50 p-3 rounded-lg border-2 border-black">
-                <p className="text-sm text-black mb-3 font-black" style={{ color: '#000000' }}>Strengths:</p>
+              {/* Strengths */}
+              <div>
+                <p className="text-sm pro-text-muted mb-2">Strengths:</p>
                 <div className="flex flex-wrap gap-2">
                   {model.strengths.map((strength, index) => (
                     <span
                       key={index}
-                      className="inline-block px-3 py-2 bg-white text-black text-sm rounded-lg border-2 border-black font-bold"
-                      style={{ color: '#000000' }}
+                      className="inline-block px-3 py-1.5 bg-blue-50 text-blue-700 text-xs rounded-lg font-medium border border-blue-200"
                     >
                       {strength}
                     </span>
