@@ -40,43 +40,38 @@ export default function Sidebar({ selectedModels, onModelToggle, isCollapsed, on
   return (
     <nav 
       id="sidebar-navigation"
-      className={`bg-slate-800 border-r border-slate-700 flex flex-col transition-all duration-300 ${
+      className={`pro-surface border-r pro-border flex flex-col transition-all duration-300 ${
         isCollapsed ? 'w-16' : 'w-80'
       }`}
       role="navigation"
       aria-label="Model selection and conversation history"
     >
       {/* Header */}
-      <div className="p-2 md:p-3 border-b border-slate-700/30">
+      <div className="p-4 border-b pro-border">
         <div className="flex items-center justify-between">
           {!isCollapsed && (
             <div className="flex-1 min-w-0">
-              <h2 className="text-sm font-medium text-slate-300 truncate">Fiesta AI</h2>
-              <p className="text-xs text-slate-500 mt-1 truncate">
-                Multi-Model Chat
+              <h2 className="text-lg font-semibold pro-text-primary truncate">Fiesta AI</h2>
+              <p className="text-sm pro-text-muted mt-1 truncate">
+                Pro Platform
               </p>
             </div>
           )}
           <button
             onClick={onToggleCollapse}
-            className={`p-2 rounded-lg transition-all duration-200 touch-manipulation ${
-              isCollapsed 
-                ? 'bg-slate-700/60 hover:bg-slate-600/80 border border-slate-600/50' 
-                : 'hover:bg-slate-800/50 border border-transparent hover:border-slate-600/30'
-            }`}
+            className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-all duration-200 touch-manipulation hover:scale-105 shadow-lg flex items-center justify-center"
+            style={{ width: '30px', height: '30px', minWidth: '30px', minHeight: '30px' }}
             title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
             aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
             aria-expanded={!isCollapsed}
             aria-controls="sidebar-content"
           >
             <svg
-              className={`w-4 h-4 text-slate-300 transition-transform duration-300 ${isCollapsed ? 'rotate-180' : ''}`}
-              fill="none"
-              stroke="currentColor"
+              style={{ width: '15px', height: '15px' }}
+              fill="currentColor"
               viewBox="0 0 24 24"
-              strokeWidth={2.5}
             >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+              <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
             </svg>
           </button>
         </div>
@@ -84,13 +79,13 @@ export default function Sidebar({ selectedModels, onModelToggle, isCollapsed, on
 
       {/* Model Selection */}
       <div id="sidebar-content" className="flex-1 overflow-y-auto" role="region" aria-labelledby="models-heading">
-        <div className="p-2 md:p-3">
+        <div className="p-4">
           {/* New Chat Button */}
           {!isCollapsed && (
-            <div className="mb-3">
+            <div className="mb-6">
               <button
                 onClick={onNewChat}
-                className="w-full px-3 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-slate-900"
+                className="pro-button w-full text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                 title="Start a new conversation"
                 aria-label="Start a new conversation and clear all chat history"
               >
@@ -104,29 +99,15 @@ export default function Sidebar({ selectedModels, onModelToggle, isCollapsed, on
             </div>
           )}
           
-          {/* Select All / Clear All Controls */}
+          {/* Clear All Control */}
           {!isCollapsed && (
-            <div className="mb-3 flex gap-2" role="group" aria-label="Model selection controls">
-              <button
-                onClick={handleSelectAll}
-                disabled={!canSelectAll}
-                className={`flex-1 px-2 py-1.5 text-xs rounded-md border transition-colors ${
-                  canSelectAll
-                    ? 'border-slate-600 text-slate-300 hover:bg-slate-800/50 hover:border-slate-500'
-                    : 'border-slate-700 text-slate-500 cursor-not-allowed'
-                }`}
-                title="Select up to 4 available models"
-                aria-label={`Select all available models (${availableModelsCount} available)`}
-                aria-describedby="select-all-help"
-              >
-                Select All
-              </button>
+            <div className="mb-3" role="group" aria-label="Model selection controls">
               <button
                 onClick={handleClearAll}
                 disabled={!canClearAll}
-                className={`flex-1 px-2 py-1.5 text-xs rounded-md border transition-colors ${
+                className={`w-full px-2 py-1.5 text-xs rounded-md border transition-colors ${
                   canClearAll
-                    ? 'border-slate-600 text-slate-300 hover:bg-slate-800/50 hover:border-slate-500'
+                    ? 'pro-button-secondary'
                     : 'border-slate-700 text-slate-500 cursor-not-allowed'
                 }`}
                 title="Clear all selected models"
@@ -135,7 +116,6 @@ export default function Sidebar({ selectedModels, onModelToggle, isCollapsed, on
               >
                 Clear All
               </button>
-              <div id="select-all-help" className="sr-only">Selects up to 4 available models for comparison</div>
               <div id="clear-all-help" className="sr-only">Removes all currently selected models</div>
             </div>
           )}
@@ -166,19 +146,21 @@ export default function Sidebar({ selectedModels, onModelToggle, isCollapsed, on
               };
               
               const modelContent = (
-                <div key={model.id} className="relative">
-                  <label className={`flex items-center p-2 rounded-lg transition-colors group touch-manipulation ${
-                    isDisabled 
-                      ? 'cursor-not-allowed opacity-50' 
-                      : 'cursor-pointer hover:bg-slate-800/50 active:bg-slate-700 focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 focus-within:ring-offset-slate-900'
+                <div key={model.id} className="relative mb-2">
+                  <label className={`flex items-center p-3 rounded-xl transition-all duration-200 group touch-manipulation border ${
+                    isSelected && !isDisabled
+                      ? 'pro-bg-accent-light border-blue-300 shadow-sm'
+                      : isDisabled 
+                        ? 'cursor-not-allowed opacity-50 border-gray-200' 
+                        : 'cursor-pointer hover:pro-surface-elevated hover:shadow-sm border-gray-200 hover:border-gray-300 focus-within:ring-2 focus-within:ring-blue-500'
                   } ${isCollapsed ? 'justify-center' : ''}`}>
                     <input
                       type="checkbox"
                       checked={isSelected}
                       disabled={isDisabled}
                       onChange={() => onModelToggle(model.id as ModelId)}
-                      className={`rounded border-slate-600 text-blue-600 focus:ring-blue-500 focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 ${
-                        isCollapsed ? 'w-4 h-4' : 'w-3 h-3'
+                      className={`rounded-md border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 ${
+                        isCollapsed ? 'w-4 h-4' : 'w-4 h-4'
                       }`}
                       aria-label={isDisabled 
                         ? `${model.name} - ${getDisabledReason()}`
@@ -192,15 +174,16 @@ export default function Sidebar({ selectedModels, onModelToggle, isCollapsed, on
                       <div className="ml-3 flex-1 min-w-0 flex items-center justify-between">
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
-                            <p className={`text-sm truncate ${
-                              isDisabled ? 'text-slate-500' : 'text-slate-200'
+                            <p className={`text-sm font-medium truncate ${
+                              isSelected && !isDisabled ? 'pro-accent' :
+                              isDisabled ? 'text-gray-400' : 'pro-text-primary'
                             }`} title={model.fullName}>
                               {model.name}
                             </p>
                             {getStatusIndicator()}
                           </div>
-                          <p className={`text-xs truncate mt-0.5 ${
-                            isDisabled ? 'text-slate-600' : 'text-slate-400'
+                          <p className={`text-xs truncate mt-1 ${
+                            isDisabled ? 'text-gray-400' : 'pro-text-muted'
                           }`}>
                             {model.provider}
                           </p>
@@ -211,9 +194,9 @@ export default function Sidebar({ selectedModels, onModelToggle, isCollapsed, on
                           </div>
                         </div>
                         {/* Info icon for tooltip */}
-                        <div className="ml-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="ml-2 opacity-60 group-hover:opacity-100 transition-opacity">
                           <svg 
-                            className="w-3 h-3 text-slate-400" 
+                            className="w-4 h-4 pro-text-muted" 
                             fill="currentColor" 
                             viewBox="0 0 20 20"
                             aria-hidden="true"
@@ -226,7 +209,7 @@ export default function Sidebar({ selectedModels, onModelToggle, isCollapsed, on
                     {isCollapsed && (
                       <>
                         {isSelected && (
-                          <div className="absolute -right-0.5 -top-0.5 w-2.5 h-2.5 bg-indigo-500 rounded-full border border-slate-900"></div>
+                          <div className="absolute -right-0.5 -top-0.5 w-3 h-3 pro-bg-accent rounded-full border-2 border-white shadow-sm"></div>
                         )}
                         <div className="absolute -bottom-0.5 -right-0.5">
                           {getStatusIndicator()}
@@ -265,7 +248,8 @@ export default function Sidebar({ selectedModels, onModelToggle, isCollapsed, on
               <span className="text-green-400 font-medium">{availableModelsCount}</span>
             </div>
             <div className="text-xs text-slate-500 pt-1 border-t border-slate-700/50">
-              Powered by OpenRouter
+              <div>Powered by</div>
+              <div>OpenRouter</div>
             </div>
           </div>
         )}

@@ -38,46 +38,82 @@ export default function MultiResponseDisplay({ selectedModels, currentPrompt, on
     }
   }, [selectedModels.length, activeTab]);
   
-  // If no models are selected, show welcome message
+  // If no models are selected, show professional welcome screen
   if (selectedModels.length === 0) {
     return (
-      <div className="flex-1 flex items-center justify-center p-8">
-        <div className="text-center max-w-2xl">
-          <div className="mb-8">
-            <svg className="w-20 h-20 mx-auto text-slate-600 mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-            </svg>
-            <h2 className="text-3xl font-bold text-slate-200 mb-4">
-              Welcome to Multi-Model AI Chat
-            </h2>
-            <p className="text-slate-400 leading-relaxed text-lg">
-              Select one or more AI models from the sidebar to start comparing their responses in real-time.
+      <div className="flex-1 flex items-center justify-center p-8 pro-surface">
+        <div className="max-w-6xl w-full">
+          {/* Hero Section */}
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl mb-6 shadow-lg">
+              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+            </div>
+            <h1 className="text-4xl font-bold pro-text-primary mb-4">
+              Fiesta AI Pro Platform
+            </h1>
+            <p className="text-xl pro-text-muted max-w-2xl mx-auto leading-relaxed">
+              Compare responses from multiple AI models simultaneously. Make informed decisions with side-by-side analysis and AI-powered evaluation.
             </p>
           </div>
-          
-          <div className="bg-slate-800 rounded-xl p-6 border border-slate-700 shadow-lg">
-            <h3 className="text-lg font-semibold text-slate-300 mb-4">Available Models:</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-slate-400">
-              {openRouterModels.map((model) => (
-                <div key={model.id} className="flex items-center gap-3 p-3 rounded-lg bg-slate-700/50 hover:bg-slate-700 transition-colors">
-                  <div className={`w-3 h-3 rounded-full ${
-                    model.status === 'available' ? 'bg-green-400' :
-                    model.status === 'rate-limited' ? 'bg-yellow-400' : 'bg-red-400'
-                  }`}></div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <div className="font-medium text-slate-300">{model.name}</div>
-                      <span className={`text-xs px-1.5 py-0.5 rounded ${
-                        model.pricing === 'free' ? 'bg-green-900/50 text-green-300' : 'bg-blue-900/50 text-blue-300'
-                      }`}>
-                        {model.pricing}
-                      </span>
-                    </div>
-                    <div className="text-xs text-slate-500">{model.provider} • {model.fullName}</div>
-                  </div>
+
+          {/* Feature Cards - Three Column Layout */}
+          <div className="flex justify-between items-start mb-12" style={{ gap: '60px', marginLeft: '50px', marginRight: '50px' }}>
+            <div className="pro-card p-8 py-12 text-center hover:shadow-lg transition-all duration-300 group flex flex-col justify-between flex-1" style={{ minHeight: '200px', height: '200px' }}>
+              <div className="flex flex-col items-center flex-1 justify-center">
+                <div className="inline-flex items-center justify-center w-12 h-12 bg-blue-100 rounded-xl mb-4 group-hover:scale-110 transition-transform">
+                  <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  </svg>
                 </div>
-              ))}
+                <h3 className="text-lg font-semibold pro-text-primary mb-3">Multi-Model Comparison</h3>
+                <p className="pro-text-muted text-sm leading-relaxed">
+                  Compare up to 4 AI models simultaneously to find the best response for your needs.
+                </p>
+              </div>
             </div>
+
+            <div className="pro-card p-8 py-12 text-center hover:shadow-lg transition-all duration-300 group flex flex-col justify-between flex-1" style={{ minHeight: '200px', height: '200px' }}>
+              <div className="flex flex-col items-center flex-1 justify-center">
+                <div className="inline-flex items-center justify-center w-12 h-12 bg-teal-100 rounded-xl mb-4 group-hover:scale-110 transition-transform">
+                  <svg className="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-semibold pro-text-primary mb-3">AI-Powered Analysis</h3>
+                <p className="pro-text-muted text-sm leading-relaxed">
+                  Get intelligent evaluation and scoring of model responses with detailed analytics.
+                </p>
+              </div>
+            </div>
+
+            <div className="pro-card p-8 py-12 text-center hover:shadow-lg transition-all duration-300 group flex flex-col justify-between flex-1" style={{ minHeight: '200px', height: '200px' }}>
+              <div className="flex flex-col items-center flex-1 justify-center">
+                <div className="inline-flex items-center justify-center w-12 h-12 bg-purple-100 rounded-xl mb-4 group-hover:scale-110 transition-transform">
+                  <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-semibold pro-text-primary mb-3">Performance Insights</h3>
+                <p className="pro-text-muted text-sm leading-relaxed">
+                  Track response speed, quality scores, and model performance metrics in real-time.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Call to Action */}
+          <div className="text-center">
+            <div className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+              Select AI Models to Get Started
+            </div>
+            <p className="pro-text-muted text-sm mt-3">
+              Choose from our collection of leading AI models in the sidebar
+            </p>
           </div>
         </div>
       </div>

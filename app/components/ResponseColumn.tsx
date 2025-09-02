@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useAtom } from 'jotai';
 import { openRouterModels, modelsStateAtom, getModelState, type ModelId, type Message } from '../lib/atoms';
 import { useToast } from '../lib/toastContext';
+import MarkdownRenderer from './MarkdownRenderer';
 
 interface ResponseColumnProps {
   modelId: ModelId;
@@ -24,8 +25,7 @@ export default function ResponseColumn({ modelId, currentPrompt, totalModels = 1
   const [copyError, setCopyError] = useState<string | null>(null);
   const [selectedText, setSelectedText] = useState<string>('');
   const [showCopyAnimation, setShowCopyAnimation] = useState(false);
-  const [showActionsMenu, setShowActionsMenu] = useState(false);
-  const actionsMenuRef = useRef<HTMLDivElement>(null);
+
   const { showToast } = useToast();
 
   const handleCopy = async (textToCopy?: string, copyType: 'full' | 'selection' = 'full') => {
@@ -188,20 +188,6 @@ export default function ResponseColumn({ modelId, currentPrompt, totalModels = 1
     handleCopy(metadata, 'full');
   };
 
-  // Close actions menu when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (actionsMenuRef.current && !actionsMenuRef.current.contains(event.target as Node)) {
-        setShowActionsMenu(false);
-      }
-    };
-
-    if (showActionsMenu) {
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
-    }
-  }, [showActionsMenu]);
-
   const handleRetry = () => {
     if ((window as any).retryFailedModels) {
       (window as any).retryFailedModels([modelId]);
@@ -236,22 +222,22 @@ export default function ResponseColumn({ modelId, currentPrompt, totalModels = 1
 
   return (
     <div 
-      className="bg-slate-800/30 rounded-lg border border-slate-700/30 flex flex-col h-full"
+      className="pro-card hover:shadow-md transition-all duration-300 flex flex-col h-full overflow-hidden"
       role="region"
       aria-label={`Response from ${model?.name || modelId}`}
       aria-live="polite"
       aria-atomic="false"
     >
-      {/* Header - Fixed Height */}
-      <header className="p-2 border-b border-slate-700/50" style={{ height: '50px', flexShrink: 0 }}>
+      {/* Header - Clean and Professional */}
+      <header className="p-4 border-b pro-border bg-white/50" style={{ flexShrink: 0 }}>
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 min-w-0">
-            <div className="text-indigo-400 flex-shrink-0" aria-hidden="true">
+          <div className="flex items-center gap-3 min-w-0 px-6">
+            <div className="pro-accent flex-shrink-0" aria-hidden="true">
               {getModelIcon()}
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
-                <h3 className="font-semibold text-slate-200 text-sm truncate" title={model?.fullName || model?.name || modelId}>
+                <h3 className="font-semibold pro-text-primary text-sm truncate" title={model?.fullName || model?.name || modelId}>
                   {model?.name || modelId}
                 </h3>
                 {model && (
@@ -267,76 +253,88 @@ export default function ResponseColumn({ modelId, currentPrompt, totalModels = 1
                 )}
               </div>
               {model && (
-                <p className="text-xs text-slate-400 truncate" title={model.provider}>
+                <p className="text-xs pro-text-muted truncate font-medium" title={model.provider}>
                   {model.provider}
                 </p>
               )}
             </div>
           </div>
           
-          {isLoadingState && (
-            <div 
-              className="flex items-center gap-1 flex-shrink-0"
-              role="status"
-              aria-live="polite"
-              aria-label={`${model?.name || modelId} is ${progress || 'thinking'}`}
-            >
-              <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-pulse" aria-hidden="true"></div>
-              <span className="text-xs text-slate-400">
-                {progress || 'Thinking...'}
-              </span>
-            </div>
-          )}
-          
-          {errorMessage && retryable && (
-            <button
-              onClick={handleRetry}
-              className="flex items-center gap-1 px-2 py-1 text-xs bg-orange-600/20 hover:bg-orange-600/30 text-orange-300 rounded transition-colors flex-shrink-0"
-              title="Retry this model"
-              aria-label={`Retry request for ${model?.name || modelId}`}
-            >
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-              Retry
-            </button>
-          )}
-          
-          {/* Focus Mode Button - only show when more than 1 model */}
-          {totalModels > 1 && onFocusModel && (
-            <button
-              onClick={() => onFocusModel(modelId)}
-              className="flex items-center gap-1 px-2 py-1 text-xs rounded transition-colors flex-shrink-0 bg-blue-600/20 hover:bg-blue-600/30 text-blue-300"
-              title="Focus on this model only"
-              aria-label={`Focus on ${model?.name || modelId} only`}
-            >
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
-              </svg>
-              Focus
-            </button>
-          )}
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {isLoadingState && (
+              <div 
+                className="flex items-center gap-2 px-3 py-1.5 pro-surface rounded-lg border pro-border"
+                role="status"
+                aria-live="polite"
+                aria-label={`${model?.name || modelId} is ${progress || 'thinking'}`}
+              >
+                <div className="w-2 h-2 pro-bg-accent rounded-full animate-pulse" aria-hidden="true"></div>
+                <span className="text-xs pro-text-muted font-medium">
+                  {progress || 'Thinking...'}
+                </span>
+              </div>
+            )}
+            
+            {errorMessage && retryable && (
+              <button
+                onClick={handleRetry}
+                className="flex items-center gap-2 px-3 py-1.5 text-xs bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-lg transition-all duration-200 font-medium"
+                title="Retry this model"
+                aria-label={`Retry request for ${model?.name || modelId}`}
+              >
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Retry
+              </button>
+            )}
+            
+            {/* Focus Mode Button - only show when more than 1 model */}
+            {totalModels > 1 && onFocusModel && (
+              <button
+                onClick={() => onFocusModel(modelId)}
+                className="flex items-center gap-2 px-3 py-1.5 text-xs pro-bg-accent-light hover:pro-bg-accent hover:text-white pro-accent border border-blue-200 rounded-lg transition-all duration-200 font-medium"
+                title="Focus on this model only"
+                aria-label={`Focus on ${model?.name || modelId} only`}
+              >
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                </svg>
+                Focus
+              </button>
+            )}
+          </div>
         </div>
       </header>
 
-            {/* Scrollable Content - Flex Fill */}
-      <div className="p-2 flex-1 overflow-y-auto">
+      {/* Chat Content Area - Modern and Clean */}
+      <div className="flex-1 overflow-y-auto response-scroll-area bg-gradient-to-b from-white/20 to-transparent p-4">
         {/* Conversation History */}
         <div className="space-y-4">
           {history.map((message, index) => (
             <div key={message.id} className="w-full">
               {message.role === 'user' ? (
-                /* User Message - Right-aligned with bright distinct container */
+                /* User Message - Modern right-aligned bubble */
                 <div className="flex justify-end mb-4">
                   <div className="max-w-[85%]">
-                    <div className="bg-white border-2 border-gray-300 text-gray-900 rounded-2xl rounded-br-md px-4 py-3 shadow-lg">
-                      <div className="text-xs text-gray-600 mb-1 font-semibold">You</div>
-                      <p className="text-sm leading-relaxed font-medium">{message.content}</p>
+                    <div className="chat-bubble-user">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="w-4 h-4 bg-white/20 rounded-full flex items-center justify-center">
+                          <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                          </svg>
+                        </div>
+                        <span className="text-xs font-semibold opacity-90">You</span>
+                      </div>
+                      <MarkdownRenderer 
+                        content={message.content} 
+                        className="text-sm" 
+                      />
                     </div>
                   </div>
                 </div>
               ) : message.modelId === modelId ? (
-                /* AI Response for this specific model - Left-aligned */
+                /* AI Response - Modern left-aligned bubble */
                 <div 
                   className="relative group"
                   onMouseEnter={() => setShowCopyButton(true)}
@@ -345,35 +343,47 @@ export default function ResponseColumn({ modelId, currentPrompt, totalModels = 1
                 >
                   <div className="flex items-start gap-3 mb-4">
                     <div className="flex-shrink-0">
-                      <div className="w-8 h-8 bg-slate-700 rounded-full flex items-center justify-center">
+                      <div className="w-8 h-8 pro-bg-accent rounded-full flex items-center justify-center text-white shadow-sm">
                         {getModelIcon()}
                       </div>
                     </div>
-                    <div className="flex-1">
-                      <div className="text-xs text-slate-400 mb-2 font-medium">
-                        {model?.name || modelId}
-                      </div>
-                      <div 
-                        className="whitespace-pre-wrap text-slate-200 leading-relaxed text-sm break-words select-text relative"
-                        onMouseUp={handleTextSelection}
-                        onKeyDown={handleKeyDown}
-                        tabIndex={0}
-                        role="article"
-                        aria-label={`Response from ${model?.name || modelId}`}
-                        aria-live="polite"
-                        aria-atomic="false"
-                      >
-                        {message.content}
-                        
-                        {/* Copy animation overlay */}
-                        {showCopyAnimation && (
-                          <div className="absolute inset-0 pointer-events-none">
-                            <div className="absolute top-2 right-2 bg-green-500 text-white px-2 py-1 rounded text-xs font-medium animate-bounce">
-                              Copied!
+                    <div className="flex-1 max-w-[85%]">
+                      <div className="chat-bubble-assistant">
+                        <div className="flex items-center gap-2 mb-3">
+                          <span className="text-xs font-semibold pro-accent">
+                            {model?.name || modelId}
+                          </span>
+                          <div 
+                            className={`w-2 h-2 rounded-full ${
+                              model?.status === 'available' ? 'bg-green-500' :
+                              model?.status === 'rate-limited' ? 'bg-yellow-500' : 'bg-red-500'
+                            }`}
+                          />
+                        </div>
+                        <div 
+                          className="whitespace-pre-wrap pro-text-primary leading-relaxed text-sm break-words select-text relative"
+                          onMouseUp={handleTextSelection}
+                          onKeyDown={handleKeyDown}
+                          tabIndex={0}
+                          role="article"
+                          aria-label={`Response from ${model?.name || modelId}`}
+                          aria-live="polite"
+                          aria-atomic="false"
+                        >
+                          <MarkdownRenderer 
+                            content={message.content} 
+                            className="text-sm" 
+                          />
+                          
+                          {/* Copy animation overlay */}
+                          {showCopyAnimation && (
+                            <div className="absolute inset-0 pointer-events-none">
+                              <div className="absolute top-2 right-2 bg-green-500 text-white px-2 py-1 rounded text-xs font-medium animate-bounce">
+                                Copied!
+                              </div>
                             </div>
-                          </div>
-                        )}
-                      </div>
+                          )}
+                        </div>
                       
                       {/* Copy controls for individual messages */}
                       <div className="flex items-center justify-between mt-3 pt-2 border-t border-slate-600/30">
@@ -410,6 +420,7 @@ export default function ResponseColumn({ modelId, currentPrompt, totalModels = 1
                       </div>
                     </div>
                   </div>
+                </div>
                   
                   {/* Desktop copy buttons for individual messages */}
                   <div className="hidden md:flex absolute top-3 right-3 gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -529,61 +540,7 @@ export default function ResponseColumn({ modelId, currentPrompt, totalModels = 1
                   </button>
                 )}
                 
-                {/* Actions menu dropdown */}
-                <div className="relative" ref={actionsMenuRef}>
-                  <button
-                    onClick={() => setShowActionsMenu(!showActionsMenu)}
-                    className={`p-2 rounded-lg transition-all duration-200 shadow-lg focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-slate-900 ${
-                      showActionsMenu 
-                        ? 'bg-slate-500/90 text-slate-100 opacity-100'
-                        : 'bg-slate-600/90 hover:bg-slate-500/90 text-slate-200 opacity-80 hover:opacity-100'
-                    }`}
-                    title="More copy options"
-                    aria-label="Show more copy options"
-                    aria-expanded={showActionsMenu}
-                    aria-haspopup="menu"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
-                    </svg>
-                  </button>
-                  
-                  {/* Dropdown menu */}
-                  {showActionsMenu && (
-                    <div 
-                      className="absolute right-0 bottom-full mb-2 bg-slate-800 border border-slate-600 rounded-lg shadow-xl py-2 z-10 min-w-[180px]"
-                      role="menu"
-                      aria-label="Additional copy options"
-                    >
-                      <button
-                        onClick={() => {
-                          handleCopyAsMarkdown();
-                          setShowActionsMenu(false);
-                        }}
-                        className="w-full px-4 py-2 text-sm text-left text-slate-200 hover:bg-slate-700 transition-colors flex items-center gap-3 focus:bg-slate-700 focus:outline-none"
-                        role="menuitem"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                        </svg>
-                        Copy as Markdown
-                      </button>
-                      <button
-                        onClick={() => {
-                          handleCopyWithMetadata();
-                          setShowActionsMenu(false);
-                        }}
-                        className="w-full px-4 py-2 text-sm text-left text-slate-200 hover:bg-slate-700 transition-colors flex items-center gap-3 focus:bg-slate-700 focus:outline-none"
-                        role="menuitem"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
-                        Copy with Metadata
-                      </button>
-                    </div>
-                  )}
-                </div>
+
                 
                 {/* Main copy all button */}
                 <button
