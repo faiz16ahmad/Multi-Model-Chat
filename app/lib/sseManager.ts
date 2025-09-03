@@ -13,7 +13,7 @@ export interface SSEConnectionOptions {
 export interface SSEEventData {
   modelId: ModelId;
   type: 'chunk' | 'progress' | 'error' | 'end' | 'heartbeat';
-  data: any;
+  data: string | { progress?: string; error?: string; [key: string]: unknown };
 }
 
 export type SSEEventHandler = (event: SSEEventData) => void;
@@ -331,7 +331,7 @@ export class SSEConnectionManager {
     // Notify about reconnection attempt
     this.onEvent({
       modelId: '' as ModelId,
-      type: 'progress' as any,
+      type: 'progress',
       data: { 
         message: `Connection lost, reconnecting... (${this.reconnectAttempts}/${this.maxReconnectAttempts})`,
         reconnecting: true 

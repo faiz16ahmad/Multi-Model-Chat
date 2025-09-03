@@ -1,4 +1,4 @@
-import { SSEConnectionManager, SSEEventHandler, SSEConnectionOptions } from './sseManager';
+import { SSEConnectionManager, SSEEventHandler, SSEConnectionOptions, SSEEventData } from './sseManager';
 import { ModelId } from './atoms';
 
 export interface ConnectionPoolOptions {
@@ -121,7 +121,13 @@ export class ConnectionPool {
     connecting: number;
     connected: number;
     error: number;
-    performance?: any[];
+    performance?: Array<{
+    id: string;
+    status: string;
+    models: string[];
+    age: number;
+    stats: Record<string, unknown>;
+  }>;
   } {
     const connections = Array.from(this.connections.values());
     const performance = connections.map(conn => ({
@@ -158,7 +164,7 @@ export class ConnectionPool {
     return cleaned;
   }
 
-  private handleEvent(connectionId: string, event: any): void {
+  private handleEvent(connectionId: string, event: SSEEventData): void {
     const connection = this.connections.get(connectionId);
     if (!connection) return;
 
@@ -176,7 +182,7 @@ export class ConnectionPool {
     const connection = this.connections.get(connectionId);
     if (!connection) return;
 
-    connection.status = status as any;
+    connection.status = status as 'connecting' | 'connected' | 'disconnected' | 'error';
     this.globalStatusHandler(connectionId, status);
 
     // Clean up completed connections

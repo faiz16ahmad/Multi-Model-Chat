@@ -25,6 +25,7 @@ export default function MainLayout({ selectedModels }: MainLayoutProps) {
   }
 
   // Mobile/Tablet view (single column with tabs)
+
   if (selectedModels.length === 1) {
     return (
       <div className="flex-1 h-full">
@@ -32,7 +33,6 @@ export default function MainLayout({ selectedModels }: MainLayoutProps) {
       </div>
     );
   }
-
   // Desktop view (multi-column grid)
   return (
     <div className="flex-1 h-full">

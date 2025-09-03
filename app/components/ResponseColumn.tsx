@@ -189,8 +189,9 @@ export default function ResponseColumn({ modelId, currentPrompt, totalModels = 1
   };
 
   const handleRetry = () => {
-    if ((window as any).retryFailedModels) {
-      (window as any).retryFailedModels([modelId]);
+    const retryFunction = (window as { retryFailedModels?: (models: string[]) => void }).retryFailedModels;
+    if (retryFunction) {
+      retryFunction([modelId]);
     }
   };
 

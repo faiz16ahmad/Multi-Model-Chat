@@ -301,7 +301,7 @@ export default function ChatApp() {
 
     switch (type) {
       case 'chunk':
-        if (data.token) {
+        if (typeof data === 'object' && data && 'token' in data && typeof data.token === 'string') {
           const currentTime = Date.now();
           // Update last response timestamp for this model
           lastResponseTimestamp.current.set(modelId, currentTime);
@@ -317,13 +317,13 @@ export default function ChatApp() {
             
             if (lastMessage && lastMessage.role === 'assistant' && lastMessage.modelId === modelId) {
               // Append token to existing assistant message
-              lastMessage.content += data.token;
+              lastMessage.content += (data as { token: string }).token;
             } else {
               // Create new assistant message
               const newMessage: Message = {
                 id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
                 role: 'assistant',
-                content: data.token,
+                content: (data as { token: string }).token,
                 timestamp: Date.now(),
                 modelId
               };
@@ -345,16 +345,16 @@ export default function ChatApp() {
       
       case 'progress':
         updateModelState(modelId, {
-          progress: data.message || 'Processing...'
+          progress: (typeof data === 'object' && data && 'message' in data && typeof data.message === 'string') ? data.message : 'Processing...'
         });
         break;
       
       case 'error':
         updateModelState(modelId, {
-          error: data.message || 'An error occurred',
+          error: (typeof data === 'object' && data && 'message' in data && typeof data.message === 'string') ? data.message : 'An error occurred',
           isLoading: false,
           progress: null,
-          retryable: data.retryable || false
+          retryable: (typeof data === 'object' && data && 'retryable' in data && typeof data.retryable === 'boolean') ? data.retryable : false
         });
         break;
       
@@ -545,7 +545,7 @@ export default function ChatApp() {
     });
 
     // Expose retry function globally for use by components
-    (window as any).retryFailedModels = retryRequest;
+    (window as { retryFailedModels?: typeof retryRequest }).retryFailedModels = retryRequest;
   };
 
   return (

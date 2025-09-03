@@ -226,7 +226,7 @@ export default function MultiResponseDisplay({ selectedModels, currentPrompt, on
             <EvaluatorColumn />
           ) : selectedModels[activeTab] && (
             <ResponseColumn
-              modelId={selectedModels[activeTab] as any}
+              modelId={selectedModels[activeTab] as string}
               currentPrompt={currentPrompt}
               totalModels={selectedModels.length}
               onFocusModel={onFocusModel}
@@ -263,7 +263,7 @@ export default function MultiResponseDisplay({ selectedModels, currentPrompt, on
         {selectedModels.map((modelId, index) => (
           <div key={modelId} role="gridcell" aria-label={`Response from model ${index + 1}`} className="min-h-0">
             <ResponseColumn
-              modelId={modelId as any}
+              modelId={modelId as string}
               currentPrompt={currentPrompt}
               totalModels={selectedModels.length}
               onFocusModel={onFocusModel}
