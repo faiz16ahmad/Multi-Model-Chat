@@ -40,8 +40,17 @@ interface EvaluationData {
 }
 
 export default function EvaluatorColumn() {
-  const [modelsState] = useAtom(modelsStateAtom);
+  const [modelsState, setModelsState] = useAtom(modelsStateAtom);
   const evaluatorState = getModelState(EVALUATOR_AGENT_ID, modelsState);
+
+  // Handle closing the analysis
+  const handleCloseAnalysis = () => {
+    setModelsState(currentMap => {
+      const newMap = new Map(currentMap);
+      newMap.delete(EVALUATOR_AGENT_ID);
+      return newMap;
+    });
+  };
 
   // Parse evaluation data from the latest assistant message
   const getEvaluationData = (): EvaluationData | null => {
@@ -75,9 +84,28 @@ export default function EvaluatorColumn() {
             <div className="w-3 h-3 bg-teal-500 rounded-full animate-pulse"></div>
             AI Analysis
           </h3>
-          <span className="text-xs pro-text-muted pro-surface px-3 py-1.5 rounded-full border pro-border font-medium">
-            🧠 Evaluating...
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="text-xs pro-text-muted pro-surface px-3 py-1.5 rounded-full border pro-border font-medium">
+              🧠 Evaluating...
+            </span>
+            <button
+              onClick={handleCloseAnalysis}
+              className="p-16 text-white bg-red-600 hover:bg-red-700 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl border-3 border-red-300 hover:border-red-400 w-64 h-64 flex items-center justify-center animate-pulse"
+              title="Cancel Analysis"
+              aria-label="Cancel AI Analysis and reset evaluation"
+              style={{
+                background: 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)',
+                boxShadow: '0 0 30px rgba(220, 38, 38, 0.8), 0 0 60px rgba(220, 38, 38, 0.4)',
+                border: '6px solid #fca5a5',
+                position: 'relative',
+                zIndex: 1000
+              }}
+            >
+              <svg className="w-32 h-32" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ strokeWidth: 12 }}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
         </div>
         
         <div className="space-y-4">
@@ -119,9 +147,28 @@ export default function EvaluatorColumn() {
             <div className="w-3 h-3 bg-red-500 rounded-full"></div>
             AI Analysis
           </h3>
-          <span className="text-xs text-red-700 bg-red-50 px-3 py-1.5 rounded-full border border-red-200 font-medium">
-            ⚠️ Error
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-red-700 bg-red-50 px-3 py-1.5 rounded-full border border-red-200 font-medium">
+              ⚠️ Error
+            </span>
+            <button
+              onClick={handleCloseAnalysis}
+              className="p-16 text-white bg-red-600 hover:bg-red-700 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl border-3 border-red-300 hover:border-red-400 w-16 h-16 flex items-center justify-center animate-pulse"
+              title="Close AI Analysis"
+              aria-label="Close AI Analysis and reset evaluation"
+              style={{
+                background: 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)',
+                boxShadow: '0 0 30px rgba(220, 38, 38, 0.8), 0 0 60px rgba(220, 38, 38, 0.4)',
+                border: '6px solid #fca5a5',
+                position: 'relative',
+                zIndex: 1000
+              }}
+            >
+              <svg className="w-32 h-32" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ strokeWidth: 3 }}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
         </div>
         
         <div className="text-red-600 text-sm">
@@ -186,9 +233,28 @@ export default function EvaluatorColumn() {
           <div className="w-3 h-3 bg-teal-500 rounded-full animate-pulse"></div>
           AI Analysis
         </h3>
-        <span className="text-xs font-medium text-teal-700 bg-teal-100/80 px-3 py-1 rounded-full">
-          Complete
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-medium text-teal-700 bg-teal-100/80 px-3 py-1 rounded-full">
+            Complete
+          </span>
+          <button
+            onClick={handleCloseAnalysis}
+            className="p-8 text-white bg-red-600 hover:bg-red-700 rounded-xl transition-all duration-200 shadow-3xl hover:shadow-4xl border-6 border-red-300 hover:border-red-400 w-32 h-32 flex items-center justify-center animate-pulse"
+            title="Close AI Analysis"
+            aria-label="Close AI Analysis and reset evaluation"
+            style={{
+              background: 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)',
+              boxShadow: '0 0 30px rgba(220, 38, 38, 0.8), 0 0 60px rgba(220, 38, 38, 0.4)',
+              border: '6px solid #fca5a5',
+              position: 'relative',
+              zIndex: 1000
+            }}
+          >
+            <svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ strokeWidth: 6 }}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
       </div>
 
       {/* Content */}

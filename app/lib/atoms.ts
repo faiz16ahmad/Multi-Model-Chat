@@ -39,13 +39,13 @@ export interface Model {
 // OpenRouter Models Configuration
 export const openRouterModels: Model[] = [
   { 
-    id: 'google/gemini-2.5-flash-image-preview:free', 
-    name: 'Gemini 2.5',
-    fullName: 'Google Gemini 2.5 Flash',
-    provider: 'Google',
-    contextLength: 1000000,
-    description: 'Fast, multimodal AI model with image understanding capabilities',
-    strengths: ['Image analysis', 'Fast responses', 'Large context'],
+    id: 'x-ai/grok-4-fast:free', 
+    name: 'Grok 4 Fast',
+    fullName: 'xAI Grok 4 Fast',
+    provider: 'xAI',
+    contextLength: 128000,
+    description: 'Fast and efficient AI model with strong reasoning capabilities',
+    strengths: ['Fast responses', 'Reasoning', 'Efficiency'],
     pricing: 'free',
     status: 'available'
   },
@@ -72,13 +72,13 @@ export const openRouterModels: Model[] = [
     status: 'available'
   },
   { 
-    id: 'google/gemma-3n-e2b-it:free', 
-    name: 'Gemma 3N',
-    fullName: 'Google Gemma 3N E2B',
-    provider: 'Google',
-    contextLength: 8192,
-    description: 'Lightweight model with good performance for general tasks',
-    strengths: ['General purpose', 'Fast inference', 'Lightweight'],
+    id: 'nvidia/nemotron-nano-9b-v2:free', 
+    name: 'Nemotron Nano 9B',
+    fullName: 'NVIDIA Nemotron Nano 9B v2',
+    provider: 'NVIDIA',
+    contextLength: 4096,
+    description: 'Efficient NVIDIA model optimized for speed and performance',
+    strengths: ['Speed', 'Efficiency', 'NVIDIA optimized'],
     pricing: 'free',
     status: 'available'
   },
@@ -116,24 +116,13 @@ export const openRouterModels: Model[] = [
     status: 'available'
   },
   {
-    id: 'qwen/qwen3-coder:free',
-    name: 'Qwen 3 Coder',
-    fullName: 'Qwen 3 Coder',
-    provider: 'Alibaba',
+    id: 'cognitivecomputations/dolphin-mistral-24b-venice-edition:free',
+    name: 'Dolphin Mistral 24B',
+    fullName: 'Dolphin Mistral 24B Venice Edition',
+    provider: 'Cognitive',
     contextLength: 32768,
-    description: 'A specialized coding model with excellent programming capabilities and code generation',
-    strengths: ['Code generation', 'Programming help', 'Technical documentation'],
-    pricing: 'free',
-    status: 'available'
-  },
-  {
-    id: 'moonshotai/kimi-k2:free',
-    name: 'Kimi K2',
-    fullName: 'Moonshot AI Kimi K2',
-    provider: 'Moonshot AI',
-    contextLength: 128000,
-    description: 'Advanced conversational AI model with strong reasoning and large context capabilities',
-    strengths: ['Large context window', 'Conversational AI', 'Reasoning tasks'],
+    description: 'Advanced model with enhanced capabilities for complex reasoning and analysis',
+    strengths: ['Advanced reasoning', 'Complex analysis', 'High performance'],
     pricing: 'free',
     status: 'available'
   },

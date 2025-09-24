@@ -23,7 +23,7 @@ export default function MultiResponseDisplay({ selectedModels, currentPrompt, on
     (evaluatorState.history.length > 0 && evaluatorState.history.some(msg => msg.role === 'assistant'));
   
   useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    const checkMobile = () => setIsMobile(window.innerWidth < 900);
     checkMobile();
     
     // Use passive listeners for better performance on mobile
@@ -254,6 +254,7 @@ export default function MultiResponseDisplay({ selectedModels, currentPrompt, on
             selectedModels.length === 2 ? 'grid-cols-3 grid-rows-1' : // 2 models + evaluator = 3 columns  
             selectedModels.length === 3 ? 'grid-cols-2 grid-rows-2' : // 3 models + evaluator = 2x2 grid
             'grid-cols-3 grid-rows-2' // 4 models + evaluator = 3x2 grid
+
           )
         }`}
         role="grid"
